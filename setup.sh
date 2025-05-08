@@ -47,7 +47,7 @@ echo "All necessary tools are installed or warned. Proceeding with the setup..."
 echo_message "Cloning the repository to $INSTALL_DIR"
 if [ ! -d "$INSTALL_DIR" ]; then
     git clone "$REPO_URL" "$INSTALL_DIR"
-    chmod 660 "$INSTALL_DIR"
+    chmod 750 "$INSTALL_DIR"
     chmod +x "$INSTALL_DIR/src/*"
 else
     echo "Directory $INSTALL_DIR already exists. Skipping cloning."
@@ -99,3 +99,4 @@ fi
 
 
 echo_message "Setup completed successfully!"
+echo_message "You might need to reboot to finish the setup (user added to codeserver group)"
