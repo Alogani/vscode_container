@@ -54,7 +54,7 @@ sudo apt install podman
   /opt/vscode_container/icon.png
   ```
 
-  For instance, a popular black-themed VSCodium icon shared by the community is shipped in the repo and can be found here:
+  For instance, a popular black-themed VSCodium icon shared by the community is shipped in the repo (but not owned by me) and can be found here:
   https://www.reddit.com/r/vsCodium/comments/q5trq1/vscodium_black_icon
    _Note: This icon does not have an identified license._
 
@@ -119,7 +119,7 @@ Global flags:
 Commands:
   create   <name>         create a new container and desktop app
   clone    <src>  [dst]   clone an existing container
-  exec     <name> <cmd>   run command as root (/bin/sh to get a shell)
+  exec     <name> <cmd>   run command as root inside container (/bin/sh to get a shell)
   launch   <name>         run as gui inside a webview.
                           Will be closed with the webview
   mount    <name> <src> [dst] [...]  mount using bindfs with uid mapping 
