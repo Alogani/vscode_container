@@ -82,15 +82,15 @@ chown -R "$DEDICATED_USER:$DEDICATED_USER" "$INSTALL_DIR"
 
 # Create a symbolic link for vscode_container.sh in /usr/local/bin
 ln -sf "$INSTALL_DIR/src/vscode_container.sh" /usr/local/bin/vscode_container
-echo "Symlink created for vscode_container.sh at /usr/local/bin/vscode_container."
+echo "vscode_container.sh installed in /usr/local/bin/vscode_container (symlink)."
 
-# Install the desktop file in the user's .local/share/applications directory
+# Create a symbolic link for .desktop file in the user's .local/share/applications directory
 DESKTOP_FILE="$INSTALL_DIR/org.alogani.vscode_container.desktop"
 if [ -f "$DESKTOP_FILE" ]; then
     sudo - $MAIN_USER -c sh -c """
       mkdir -p "$HOME/.local/share/applications"
-      cp "$DESKTOP_FILE" "$HOME/.local/share/applications/"
-      echo "Desktop file installed in $HOME/.local/share/applications."
+      ln -s "$DESKTOP_FILE" "$HOME/.local/share/applications/"
+      echo "Desktop file installed in $HOME/.local/share/applications (symlink)."
     """
 else
     echo "Desktop file not found at $DESKTOP_FILE. Skipping installation."
