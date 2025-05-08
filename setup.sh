@@ -66,7 +66,7 @@ else
 fi
 
 # Modify the sudoers file
-echo_message "Modifying the sudoers file"
+echo_message "Granting $MAIN_USER access to $DEDICATED_USER in the sudoers file"
 SUDOERS_FILE="/etc/sudoers.d/$DEDICATED_USER"
 if [ ! -f "$SUDOERS_FILE" ]; then
     echo "$MAIN_USER ALL=($DEDICATED_USER) NOPASSWD: ALL" >"$SUDOERS_FILE"
