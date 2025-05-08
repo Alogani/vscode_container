@@ -122,7 +122,7 @@ case "$COMMAND" in
     ;;
 
   exec)
-    NAME="$1"; require "$NAME"
+    NAME="$1"; require "$NAME"; shift
     CMD=$@; require "$CMD"
     su_codeserver podman exec -u 0 -it "$NAME" $CMD
     ;;
