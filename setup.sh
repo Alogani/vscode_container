@@ -47,6 +47,7 @@ echo "All necessary tools are installed or warned. Proceeding with the setup..."
 echo_message "Cloning the repository to $INSTALL_DIR"
 if [ ! -d "$INSTALL_DIR" ]; then
     git clone "$REPO_URL" "$INSTALL_DIR"
+    chmod +x "$INSTALL_DIR/src/*"
 else
     echo "Directory $INSTALL_DIR already exists. Skipping cloning."
 fi
@@ -86,9 +87,11 @@ echo "Symlink created for vscode_container.sh at /usr/local/bin/vscode_container
 # Install the desktop file in the user's .local/share/applications directory
 DESKTOP_FILE="$INSTALL_DIR/org.alogani.vscode_container.desktop"
 if [ -f "$DESKTOP_FILE" ]; then
-    mkdir -p "$HOME/.local/share/applications"
-    cp "$DESKTOP_FILE" "$HOME/.local/share/applications/"
-    echo "Desktop file installed in $HOME/.local/share/applications."
+    sudo - $MAIN_USER -c sh -c """
+      mkdir -p "$HOME/.local/share/applications"
+      cp "$DESKTOP_FILE" "$HOME/.local/share/applications/"
+      echo "Desktop file installed in $HOME/.local/share/applications."
+    """
 else
     echo "Desktop file not found at $DESKTOP_FILE. Skipping installation."
 fi
