@@ -9,6 +9,7 @@ BIN="/usr/local/bin/vscode_container"
 ICON="$APP_DIR/icon.png"
 # default image
 IMAGE="docker.io/codercom/code-server:latest"
+CUSTOM_IMAGE="false"
 
 usage() {
   cat <<EOF
@@ -46,7 +47,7 @@ ISOLATED="false"
 while true; do
   case "$1" in
     --isolated)    ISOLATED="true"; shift ;;
-    --custom-image) IMAGE="$2"; shift 2 ;;
+    --custom-image) IMAGE="$2"; CUSTOM_IMAGE="true"; shift 2 ;;
     --)            shift; break ;;
     *)             usage ;;
   esac
@@ -179,11 +180,13 @@ case "$COMMAND" in
   refresh)
     NAME="$1"; require "$NAME"
     echo "Inspecting current container image..."
-    ORIGINAL_IMAGE=$(su_codeserver podman inspect "$NAME" --format '{{.Config.Image}}')
+    if [ $CUSTOM_IMAGE = "false" ]; then
+      IMAGE=$(su_codeserver podman inspect "$NAME" --format '{{.Config.Image}}')
+    fi
     echo "Removing old container..."
     su_codeserver podman rm -f "$NAME"
-    echo "Re-creating container with image '$ORIGINAL_IMAGE' (preserving $CONTAINERS/$NAME)…"
-    IMAGE="$ORIGINAL_IMAGE" new_container run "$NAME"
+    echo "Re-creating container with image '$IMAGE' (preserving $CONTAINERS/$NAME)…"
+    new_container run "$NAME"
     su_codeserver podman stop "$NAME"
     echo "Refreshed '$NAME'."
     ;;
