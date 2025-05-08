@@ -3,7 +3,7 @@
 TARGET_USER="codeserver"
 CONFIGS="/opt/vscode_container"
 BIN="/usr/local/bin/vscode_container.sh"
-ICON="$CONFIGS/icon.png"
+ICON="$CONFIGS/icon"
 
 COMMAND="$1"
 CONTAINER_NAME="$2"
