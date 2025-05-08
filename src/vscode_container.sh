@@ -97,6 +97,21 @@ new_container() {
     $IMAGE
 }
 
+reapply_mounts() {
+  NAME="$1"
+  MFILE="$CONTAINERS/$NAME/mounts"
+  [ -f "$MFILE" ] || return
+  while IFS='|' read -r SRC ALIAS OPTS; do
+    DST="$CONTAINERS/$NAME/shared/$ALIAS"
+    mkdir -p "$DST"
+    if ! mountpoint -q "$DST"; then
+      # re-bindfs with saved options
+      eval bindfs -u "$(id -u $TARGET_USER)" -g "$(id -g $TARGET_USER)" $OPTS "$SRC" "$DST"
+      echo "Re-mounted $SRC → $DST"
+    fi
+  done < "$MFILE"
+}
+
 #––– commands –––#
 case "$COMMAND" in
 
@@ -137,6 +152,7 @@ case "$COMMAND" in
         exit $?
       fi
     fi
+    reapply_mounts "$NAME"
     su_codeserver podman start "$NAME" >/dev/null
     PORT=$(su_codeserver podman port "$NAME" | awk -F: '{print $2}')
     "$APP_DIR/src/webview.py" "$APP_NAME" "$NAME" "$PORT"
@@ -164,6 +180,7 @@ case "$COMMAND" in
     done
 
     mkdir -p "$DST"
+    echo "$SRC|$ALIAS|$OPTS" >> "$CONTAINERS/$NAME/mounts"
     bindfs -u $(id -u $TARGET_USER) -g $(id -g $TARGET_USER) \
        $OPTS "$SRC" "$DST"
 
@@ -175,6 +192,8 @@ case "$COMMAND" in
     DST="$CONTAINERS/$NAME/shared/$2"; require "$DST"
     fusermount -u "$DST" 
     rmdir "$DST"
+    MFILE="$CONTAINERS/$NAME/mounts"
+    grep -v "|$2|" "$MFILE" > "$MFILE.tmp" && mv "$MFILE.tmp" "$MFILE"
     ;;
 
   refresh)
@@ -199,6 +218,7 @@ case "$COMMAND" in
 
   start)
     NAME="$1"; require "$NAME"
+    reapply_mounts "$NAME"
     su_codeserver podman start "$NAME"
     PORT=$(su_codeserver podman port "$NAME" | awk -F: '{print $2}')
     echo "Listening on port $PORT"
