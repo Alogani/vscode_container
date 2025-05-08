@@ -42,7 +42,8 @@ sudo apt install podman
 2. Run or follow the installation script
 
 ```
-curl -fsSL https://raw.githubusercontent.com/Alogani/vscode_container/main/setup.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Alogani/vscode_container/main/setup.sh > /tmp/setup.sh
+sudo bash /tmp/setup.sh
 ```
 
 
