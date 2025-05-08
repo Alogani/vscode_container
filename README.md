@@ -41,23 +41,27 @@ sudo apt install podman
 
 ## Install Required Files
 
-Create the main folders:
+- Create the main folders:
 
-```
-sudo mkdir -p /opt/vscode_container/config
-sudo mkdir -p /opt/vscode_container/local
-```
+  ```
+  sudo mkdir -p /opt/vscode_container/config
+  sudo mkdir -p /opt/vscode_container/local
+  ```
 
-Add a custom icon of your choice to:
+- Add a custom icon of your choice to:
 
-```
-/opt/vscode_container/icon
-```
+  ```
+  /opt/vscode_container/icon.png
+  ```
 
-Install the scripts:
+  For instance, a popular black-themed VSCodium icon shared by the community is shipped in the repo and can be found here:
+  https://www.reddit.com/r/vsCodium/comments/q5trq1/vscodium_black_icon
+   _Note: This icon does not have an identified license._
 
-* `webview.py` → `/usr/local/bin/`
-* `vscode_container` → `/usr/local/bin/`
+- Install the scripts:
+
+  * `webview.py` → `/usr/local/bin/`
+  * `vscode_container` → `/usr/local/bin/`
 
 ## Create a Dedicated User
 
@@ -106,7 +110,26 @@ Good call—here’s the updated **Command Line** section with a clear warning a
 You can manage containers with:
 
 ```
-vscode_container <create|launch|start|stop|remove|list|shell|podman> [container_name] [--isolated]
+vscode_container [--isolated] [--custom-image IMAGE] <command> <args>
+
+Global flags:
+  --isolated               copy $CONFIGS/local and $CONFIGS/config into each container dir
+  --custom-image IMAGE     override default code-server image
+
+Commands:
+  create   <name>         create a new container and desktop app
+  clone    <src>  [dst]   clone an existing container
+  exec     <name> <cmd>   run command as root (/bin/sh to get a shell)
+  launch   <name>         run as gui inside a webview.
+                          Will be closed with the webview
+  mount    <name> <src> [dst] [...]  mount using bindfs with uid mapping 
+  umount   <name> <dst>
+  refresh  <name>         recreate a container but keep the config files
+  remove   <name>         remove with all its configuration
+  start    <name>         start in the background without gui
+  stop     <name>         stop the background container
+  list                    list all containers
+  podman   [...]          pass through to podman
 ```
 
 In practice, you'll mostly use:
@@ -131,7 +154,8 @@ Once created, just launch your project from the auto-generated desktop icon—no
 
 Each project gets a `.desktop` launcher with a simple embedded WebView for code-server:
 
-![webview screenshot](https://github.com/user-attachments/assets/8dd314fd-cbac-47d1-b97b-65946b8b148a)
+![image](https://github.com/user-attachments/assets/8e9d6444-2a46-4d38-8d2c-94d00330ea58)
+
 
 ---
 
