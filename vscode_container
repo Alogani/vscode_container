@@ -2,7 +2,7 @@
 
 TARGET_USER="codeserver"
 CONFIGS="/opt/vscode_container"
-BIN="/usr/local/bin/vscode_container.sh"
+BIN="/usr/local/bin/vscode_container"
 ICON="$CONFIGS/icon"
 
 COMMAND="$1"
