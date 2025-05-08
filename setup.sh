@@ -66,6 +66,9 @@ else
     useradd -m -s /bin/bash "$DEDICATED_USER"
 fi
 
+# Prevent podman to be killed
+loginctl enable-linger codeserver
+
 echo_message "Granting $MAIN_USER access to $DEDICATED_USER in the sudoers file"
 SUDOERS_FILE="/etc/sudoers.d/$DEDICATED_USER"
 if [ ! -f "$SUDOERS_FILE" ]; then
