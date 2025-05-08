@@ -1,0 +1,116 @@
+#!/bin/sh
+
+TARGET_USER="codeserver"
+CONFIGS="/opt/vscode_container"
+BIN="/usr/local/bin/vscode_container.sh"
+ICON="$CONFIGS/icon.png"
+
+COMMAND="$1"
+CONTAINER_NAME="$2"
+ISOLATED="false"
+
+# Parse optional flags
+for arg in "$@"; do
+    case "$arg" in
+        --isolated) ISOLATED="true" ;;
+    esac
+done
+
+CONTAINER_DIR="$CONFIGS/$CONTAINER_NAME"
+LOCAL_DIR="$CONFIGS/local"
+CONFIG_DIR="$CONFIGS/config"
+DESKTOP_PATH="$HOME/.local/share/applications/$CONTAINER_NAME.desktop"
+
+require_args() {
+    for var in "$@"; do
+        eval val=\$$var
+        [ -z "$val" ] && echo "Error: $var is required." && exit 1
+    done
+}
+
+exec_codeserver() {
+    sudo -u "$TARGET_USER" --login $@
+}
+
+create_container() {
+    require_args CONTAINER_NAME
+
+    exec_codeserver mkdir -p "$CONTAINER_DIR/project"
+
+    if [ "$ISOLATED" = "true" ]; then
+        echo "Copying local and config directories for isolation..."
+        exec_codeserver cp -r "$LOCAL_DIR" "$CONTAINER_DIR/local"
+        exec_codeserver cp -r "$CONFIG_DIR" "$CONTAINER_DIR/config"
+    else
+        echo "Linking shared local and config directories..."
+        exec_codeserver ln -s "$LOCAL_DIR" "$CONTAINER_DIR/local"
+        exec_codeserver ln -s "$CONFIG_DIR" "$CONTAINER_DIR/config"
+    fi
+
+    exec_codeserver podman run -d \
+        --name "$CONTAINER_NAME" \
+        -p 127.0.0.1::8080 \
+        -v "$CONTAINER_DIR/local:/home/coder/.local" \
+        -v "$CONTAINER_DIR/config:/home/coder/.config" \
+        -v "$CONTAINER_DIR/project:/home/coder/project" \
+        -e "DOCKER_USER=$TARGET_USER" \
+        -u "$(id -u $TARGET_USER):$(id -g $TARGET_USER)" \
+        --userns=keep-id \
+        docker.io/codercom/code-server:latest
+
+    cat <<EOF > "$DESKTOP_PATH"
+[Desktop Entry]
+Name=VSCode $CONTAINER_NAME
+Categories=Development;
+Comment=Spin up vscode dev environment
+Exec=$BIN launch $CONTAINER_NAME
+Icon=$ICON
+Terminal=false
+Type=Application
+EOF
+
+    exec_codeserver podman stop "$CONTAINER_NAME"
+    echo "Here is the config.yaml content located at $CONTAINER_DIR/config/code-server/config.yaml"
+    exec_codeserver cat $CONTAINER_DIR/config/code-server/config.yaml
+}
+
+launch() {
+    require_args CONTAINER_NAME
+    start "$CONTAINER_NAME" > /dev/null
+    PORT=$(exec_codeserver podman port "$CONTAINER_NAME" | awk '{ print $3 }' | awk -F: '{ print $2 }')
+    webview.py "$CONTAINER_NAME" "$PORT"
+    stop "$CONTAINER_NAME"
+}
+
+start() {
+    require_args CONTAINER_NAME
+    exec_codeserver podman start "$CONTAINER_NAME"
+    PORT=$(exec_codeserver podman port "$CONTAINER_NAME" | awk '{ print $3 }' | awk -F: '{ print $2 }')
+    echo "The container is available at port: $PORT"
+}
+
+stop() {
+    require_args CONTAINER_NAME
+    exec_codeserver podman stop "$CONTAINER_NAME"
+}
+
+remove() {
+    require_args CONTAINER_NAME
+    exec_codeserver podman rm "$CONTAINER_NAME"
+    exec_codeserver rm -rf "$CONTAINER_DIR"
+    rm -f "$DESKTOP_PATH"
+}
+
+list_containers() {
+    exec_codeserver podman ps --all
+}
+
+case "$COMMAND" in
+    create) create_container ;;
+    launch) launch ;;
+    start) start ;;
+    stop) stop ;;
+    remove) remove ;;
+    list) list_containers ;;
+    *) echo "Usage: $0 <create|launch|start|stop|remove|list> [container_name] [--isolated]"; exit 1 ;;
+esac
