@@ -47,6 +47,7 @@ echo "All necessary tools are installed or warned. Proceeding with the setup..."
 echo_message "Cloning the repository to $INSTALL_DIR"
 if [ ! -d "$INSTALL_DIR" ]; then
     git clone "$REPO_URL" "$INSTALL_DIR"
+    chmod 660 "$INSTALL_DIR"
     chmod +x "$INSTALL_DIR/src/*"
 else
     echo "Directory $INSTALL_DIR already exists. Skipping cloning."
@@ -65,7 +66,6 @@ else
     useradd -m -s /bin/bash "$DEDICATED_USER"
 fi
 
-# Modify the sudoers file
 echo_message "Granting $MAIN_USER access to $DEDICATED_USER in the sudoers file"
 SUDOERS_FILE="/etc/sudoers.d/$DEDICATED_USER"
 if [ ! -f "$SUDOERS_FILE" ]; then
@@ -75,12 +75,13 @@ else
     echo "Sudoers file for $DEDICATED_USER already exists."
 fi
 
-# Create containers directory and set ownership
+usermod -aG $DEDICATED_USER $MAIN_USER
+
+
 echo_message "Setting ownership for $CONTAINERS_DIR"
 mkdir -p "$CONTAINERS_DIR"
 chown -R "$DEDICATED_USER:$DEDICATED_USER" "$INSTALL_DIR"
 
-# Create a symbolic link for vscode_container.sh in /usr/local/bin
 ln -sf "$INSTALL_DIR/src/vscode_container.sh" /usr/local/bin/vscode_container
 echo "vscode_container.sh installed in /usr/local/bin/vscode_container (symlink)."
 
