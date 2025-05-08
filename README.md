@@ -1,4 +1,4 @@
-# vscode\_container
+# VSCode container
 
 A lightweight, sandboxed wrapper around `podman` for running [code-server](https://github.com/coder/code-server) containers with isolated environments.
 This script enables easy management of per-project VSCode containers, complete with GUI access through a minimal webview.
