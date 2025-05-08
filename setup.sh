@@ -14,8 +14,9 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+DEFAULT_MAIN_USER="$(id -u --name)"
 read -p "Enter the main user (default: $DEFAULT_MAIN_USER): " MAIN_USER
-MAIN_USER=${MAIN_USER:-$DEFAULT_MAIN_USER}
+MAIN_USER="${MAIN_USER:-$DEFAULT_MAIN_USER}"
 
 # Function to echo messages
 echo_message() {
