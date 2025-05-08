@@ -99,12 +99,12 @@ Once created, just launch your project from the auto-generated desktop icon—no
 
 Container-to-host folder mapping looks like this:
 
-| Inside Container     | Host Path                                 |
-| -------------------- | ----------------------------------------- |
-| `project`            | `/opt/vscode_container/CONTAINER/project` |
-| `.config` (default)  | `/opt/vscode_container/config`            |
-| `.config` (isolated) | `/opt/vscode_container/CONTAINER/config`  |
-| `.local` (default)   | `/opt/vscode_container/local`             |
-| `.local` (isolated)  | `/opt/vscode_container/CONTAINER/local`   |
+| Inside Container     | Host Path                                           |
+| -------------------- | --------------------------------------------------- |
+| `project`            | `/opt/vscode_container/containers/<name>/project`   |
+| `.config` (default)  | `/opt/vscode_container/config`                      |
+| `.config` (isolated) | `/opt/vscode_container/containers/<name>/config`    |
+| `.local` (default)   | `/opt/vscode_container/local`                       |
+| `.local` (isolated)  | `/opt/vscode_container/containers/<name>/local`     |
 
 When using `--isolated`, the container gets its own copies of the default config and local dirs.
