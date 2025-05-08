@@ -57,7 +57,7 @@ Add a custom icon of your choice to:
 Install the scripts:
 
 * `webview.py` → `/usr/local/bin/`
-* `vscode_container.sh` → `/usr/local/bin/`
+* `vscode_container` → `/usr/local/bin/`
 
 ## Create a Dedicated User
 
@@ -92,7 +92,7 @@ sudo chown -R codeserver /opt/vscode_container
 ## Command Line
 
 ```
-vscode_container.sh <create|launch|start|stop|remove|list> [container_name] [--isolated]
+vscode_container <create|launch|start|stop|remove|list> [container_name] [--isolated]
 ```
 
 ## Desktop Launcher
