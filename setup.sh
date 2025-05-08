@@ -78,4 +78,19 @@ echo_message "Setting ownership for $CONTAINERS_DIR"
 mkdir -p "$CONTAINERS_DIR"
 chown -R "$DEDICATED_USER:$DEDICATED_USER" "$INSTALL_DIR"
 
+# Create a symbolic link for vscode_container.sh in /usr/local/bin
+ln -sf "$INSTALL_DIR/src/vscode_container.sh" /usr/local/bin/vscode_container
+echo "Symlink created for vscode_container.sh at /usr/local/bin/vscode_container."
+
+# Install the desktop file in the user's .local/share/applications directory
+DESKTOP_FILE="$INSTALL_DIR/org.alogani.vscode_container.desktop"
+if [ -f "$DESKTOP_FILE" ]; then
+    mkdir -p "$HOME/.local/share/applications"
+    cp "$DESKTOP_FILE" "$HOME/.local/share/applications/"
+    echo "Desktop file installed in $HOME/.local/share/applications."
+else
+    echo "Desktop file not found at $DESKTOP_FILE. Skipping installation."
+fi
+
+
 echo_message "Setup completed successfully!"
