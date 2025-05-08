@@ -22,6 +22,7 @@ setup and cli are not polished but works fine.
 
 ## Add necessary files and dependencies
 - Create /opt/vscode_container, /opt/vscode_container/config, /opt/vscode_container/local
+- Add your icon of choice in /opt/vscode_container/icon
 - Install webview.py in /usr/local/bin
 - Install vscode_container.sh in /usr/local/bin
 
