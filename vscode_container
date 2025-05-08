@@ -105,6 +105,16 @@ list_containers() {
     exec_codeserver podman ps --all
 }
 
+podman_cmd() {
+    shift
+    exec_codeserver podman "$@"
+}
+
+shell() {
+    require_args CONTAINER_NAME
+    exec_codeserver podman exec -u 0 -it "$CONTAINER_NAME" /bin/sh
+}
+
 case "$COMMAND" in
     create) create_container ;;
     launch) launch ;;
@@ -112,5 +122,7 @@ case "$COMMAND" in
     stop) stop ;;
     remove) remove ;;
     list) list_containers ;;
-    *) echo "Usage: $0 <create|launch|start|stop|remove|list> [container_name] [--isolated]"; exit 1 ;;
+    shell) shell ;;
+    podman) podman_cmd ;;
+    *) echo "Usage: $0 <create|launch|start|stop|remove|list|shell|podman> [container_name] [--isolated]"; exit 1 ;;
 esac
