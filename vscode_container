@@ -106,8 +106,7 @@ list_containers() {
 }
 
 podman_cmd() {
-    shift
-    exec_codeserver podman "$@"
+    exec_codeserver podman $@
 }
 
 shell() {
@@ -123,6 +122,6 @@ case "$COMMAND" in
     remove) remove ;;
     list) list_containers ;;
     shell) shell ;;
-    podman) podman_cmd ;;
+    podman) shift; podman_cmd $@ ;;
     *) echo "Usage: $0 <create|launch|start|stop|remove|list|shell|podman> [container_name] [--isolated]"; exit 1 ;;
 esac
