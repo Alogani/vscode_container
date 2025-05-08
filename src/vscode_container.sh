@@ -67,8 +67,9 @@ setup_dirs() {
   NAME="$1"
   D="$CONTAINERS/$NAME"
   su_codeserver mkdir -p "$D/project"
-  su_codeserver mkdir -p "$D/shared"
-  su_codeserver chmod 777 "$D/shared"
+  mkdir -p "$D/shared"
+  chown ":$TARGET_USER" "$D/shared"
+  chmod 750 "$D/shared"
   if [ "$ISOLATED" = "true" ]; then
     su_codeserver cp -a "$APP_DIR/local" "$D/local"
     su_codeserver cp -a "$APP_DIR/config" "$D/config"
