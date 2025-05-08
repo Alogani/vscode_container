@@ -42,3 +42,18 @@ Usage: /usr/local/bin/vscode_container.sh <create|launch|start|stop|remove|list>
 
 ### With the launcher
 ![image](https://github.com/user-attachments/assets/8dd314fd-cbac-47d1-b97b-65946b8b148a)
+
+### Miscellaneous
+You can tweak code server as you want.
+The correspondance folders are :
+
+| Inside Container     | Outside Container                                   |
+|----------------------|-----------------------------------------------------|
+| `project`            | `/opt/vscode_container/CONTAINER/project`           |
+| `.config (default)`  | `/opt/vscode_container/config`                      |
+| `.config (isolated)` | `/opt/vscode_container/CONTAINER/config`            |
+| `.local (default)`   | `/opt/vscode_container/local`                       |
+| `.local (isolated)`  | `/opt/vscode_container/CONTAINER/local`             |
+
+
+At creation, isolated container will copy the config and local of /opt/vscode_container/config and /opt/vscode_container/local respectively
