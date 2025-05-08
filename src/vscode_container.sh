@@ -178,10 +178,12 @@ case "$COMMAND" in
 
   refresh)
     NAME="$1"; require "$NAME"
+    echo "Inspecting current container image..."
+    ORIGINAL_IMAGE=$(su_codeserver podman inspect "$NAME" --format '{{.Config.Image}}')
     echo "Removing old container..."
     su_codeserver podman rm -f "$NAME"
-    echo "Re-creating container (preserving $CONTAINERS/$NAME)…"
-    new_container run  "$NAME"
+    echo "Re-creating container with image '$ORIGINAL_IMAGE' (preserving $CONTAINERS/$NAME)…"
+    IMAGE="$ORIGINAL_IMAGE" new_container run "$NAME"
     su_codeserver podman stop "$NAME"
     echo "Refreshed '$NAME'."
     ;;
