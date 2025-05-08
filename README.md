@@ -1,37 +1,105 @@
 # vscode\_container
 
-Helper scripts to run one `code-server` container per project using rootless Podman. Each project gets its own isolated environment.
+A lightweight, sandboxed wrapper around `podman` for running [code-server](https://github.com/coder/code-server) containers with isolated environments.
+This script enables easy management of per-project VSCode containers, complete with GUI access through a minimal webview.
 
-The setup is minimal but functional.
+---
 
-## What This Does
+## 🧭 Overview
 
-[`code-server`](https://github.com/coder/code-server) is an open source version of Visual Studio Code that runs in a browser. It can be containerized and run securely.
+`vscode_container` is a shell-based tool to create and manage rootless containers using `podman`, running [code-server](https://hub.docker.com/r/codercom/code-server) inside each container for isolated, sandboxed VSCode sessions.
 
-This project wraps `code-server` in a dedicated container per project, using rootless Podman. Each container:
+Each container behaves like its own development environment — fully isolated by default, with optional shared configuration directories or external volume mounts.
 
-* Has access only to one specific project folder
-* Runs as a separate system user (`codeserver`) for strict isolation
-* Can optionally have its own `.config` and `.local` (via `--isolated` mode)
-* Is launched via a `.desktop` file using a lightweight WebView frontend
+---
 
-This setup prioritizes both usability and security:
+## 🚀 Features
 
-* Your host system stays clean—no global installs, no shared processes
-* Every project has its own sandboxed dev environment
-* Code-server runs as a separate user, meaning even if compromised, it can't affect your session
+* **Wrapper around `podman`**, leveraging rootless containers for safety and separation.
+* **No modified images** – uses the official, unmodified `codercom/code-server` Docker image.
+* **Runs as a dedicated unprivileged user** (`codeserver`) for additional security.
+* **No access to the host network**, no `$HOME` sharing — enforces strong sandboxing boundaries.
+* **Supports both shared and isolated config/local directories** (`~/.config`, `~/.local`) depending on your workflow.
+* **Per-project isolation** — containers are mapped to project-specific directories.
+* **CLI-first**, no YAML, no JSON, no abstraction.
+* **Simple, minimal**, built on standard Linux tools: `python`, `bash` and `podman`.
+* **GUI launcher** — starts a lightweight Python-based webview to connect to code-server over a local port.
 
-## Why
+---
 
-* Microsoft’s Dev Container is proprietary
-* DevPod is open source but doesn't integrate well with Flatpak, `bwrap`, or nested container scenarios
-* This solution is simple, minimal, and works with standard Linux tools (Podman, bash, sudo)
+## 📁 Directory Layout
+
+Each container lives under `/opt/vscode_container/containers/<name>`:
+
+```
+project/       ← Your working directory
+shared/        ← Bind-mounted resources, optional
+config/        ← ~/.config inside the container (linked or copied)
+local/         ← ~/.local inside the container (linked or copied)
+```
+
+Depending on the `--isolated` flag, `config/` and `local/` are either:
+
+* **Linked** to global shared directories, or
+* **Copied** into the container directory for complete separation (only at creation).
+
+---
+
+## 🧠 Why This Exists
+
+### The Alternatives Fall Short:
+
+* **Microsoft Dev Containers** is proprietary.
+* **DevPod** is open-source but fails to integrate well with Flatpak, Bubblewrap, or nonstandard sandbox environments.
+
+### This project:
+
+* Works everywhere `podman` and `bash` work.
+* Offers dead-simple integration into custom workflows.
+* Keeps your system clean and predictable, with **no daemon**, **no Docker**, **no root access**.
+
+---
+
+## 🔒 Security & Sandboxing
+
+* Containers are started **rootless** as the `codeserver` user.
+* No host networking.
+* No access to your `$HOME` directory.
+* Optional `bindfs` volume mounting with UID/GID mapping for secure external access.
+
+This makes it ideal for high-assurance workflows, development on shared systems, or integrating into containerized desktop environments.
+
+---
+
+## 🖥️ Requirements
+
+* `podman`
+* `code-server` image (default: `codercom/code-server:latest`)
+* `bindfs` (for volume mounting)
+* `sudo`
+* Python + Gtk/WebKit (for GUI launcher)
+
+---
+
+## 🧪 Example
+
+```bash
+# Create a new isolated container
+vscode_container --isolated create myproject
+
+# Mount a local folder into it
+vscode_container mount myproject ~/dev/stuff code
+
+# Launch the GUI using the command line (or you can use the launcher)
+vscode_container launch myproject
+
+# Delete completely the project and all its files
+vscode_container remove myproject
+```
 
 ---
 
 # Setup
-
-## Setup
 
 1. Install Podman:
 
@@ -46,7 +114,6 @@ curl -fsSL https://raw.githubusercontent.com/Alogani/vscode_container/main/setup
 sudo bash /tmp/setup.sh
 ```
 
-
 # Usage
 
 ## Command Line
@@ -55,7 +122,7 @@ You can manage containers with:
 
 ```
 Global flags:
-  --isolated               copy $APP_DIR/local and $APP_DIR/config into each container dir
+  --isolated               copy $APP_DIR/local and $APP_DIR/config at creation
   --custom-image IMAGE     override default code-server image
 
 Commands:
@@ -63,7 +130,7 @@ Commands:
   clone    <src>  [dst]   clone an existing container
   exec     <name> <cmd>   run command as root (/bin/sh to get a shell)
   launch   [name]         run as gui inside a webview.
-                          Will be closed with the webview.
+                          The container will stop when the webview closes.
 			  If name is not provided, use a popup
   mount    <name> <src> [dst] [-- ...]  mount using bindfs with uid mapping 
   umount   <name> <dst>
@@ -91,20 +158,25 @@ In practice, you'll mostly use:
 
   ⚠️ **Warning:** This will permanently delete the container **and all associated files**, including the project directory, and if isolated, configs, and local data. Make backups (or commit) if needed before running this.
 
-Once created, just launch your project from the auto-generated desktop icon—no need to return to the terminal for day-to-day use.
+Once created, just launch your project using the desktop icon—no need to return to the terminal for day-to-day use.
 
 ---
 
 ## Directory Mapping
 
-Container-to-host folder mapping looks like this:
+Here is the list of folders shared with the host:
 
-| Inside Container     | Host Path                                           |
-| -------------------- | --------------------------------------------------- |
-| `project`            | `/opt/vscode_container/containers/<name>/project`   |
-| `.config` (default)  | `/opt/vscode_container/config`                      |
-| `.config` (isolated) | `/opt/vscode_container/containers/<name>/config`    |
-| `.local` (default)   | `/opt/vscode_container/local`                       |
-| `.local` (isolated)  | `/opt/vscode_container/containers/<name>/local`     |
+| Inside Container           | Host Path                                           |
+| -------------------------- | --------------------------------------------------- |
+| `$HOME/project`            | `/opt/vscode_container/containers/<name>/project`   |
+| `$HOME/shared`             | `/opt/vscode_container/containers/<name>/shared` (empty by default)   |
+| `$HOME/.config` (default)  | `/opt/vscode_container/config`                      |
+| `$HOME/.config` (isolated) | `/opt/vscode_container/containers/<name>/config`    |
+| `$HOME/.local`  (default)  | `/opt/vscode_container/local`                       |
+| `$HOME/.local`  (isolated) | `/opt/vscode_container/containers/<name>/local`     |
 
-When using `--isolated`, the container gets its own copies of the default config and local dirs.
+### Mounting with `bindfs`
+
+* **Mounts work only if `bindfs` is installed**. When mounting external directories into the container using the `mount` command, the `bindfs` tool will be used to ensure secure access by mapping the UID and GID of the `codeserver` user in the container to the corresponding values on the host system.
+
+* All mounts are placed inside the **`shared/`** directory in the container, under `/opt/vscode_container/containers/<name>/shared`.
