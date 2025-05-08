@@ -91,9 +91,41 @@ sudo chown -R codeserver /opt/vscode_container
 
 ## Command Line
 
+Absolutely. Here's the revised **Command Line** section with both commonly used commands highlighted and the wording tightened up:
+
+---
+
+## Command Line
+
+Good call—here’s the updated **Command Line** section with a clear warning added for `remove`:
+
+---
+
+## Command Line
+
+You can manage containers with:
+
 ```
-vscode_container <create|launch|start|stop|remove|list> [container_name] [--isolated]
+vscode_container <create|launch|start|stop|remove|list|shell|podman> [container_name] [--isolated]
 ```
+
+In practice, you'll mostly use:
+
+* **Create a new container** (with optional isolation):
+
+  ```
+  vscode_container create myproject [--isolated]
+  ```
+
+* **Remove a container** when you're done:
+
+  ```
+  vscode_container remove myproject
+  ```
+
+  ⚠️ **Warning:** This will permanently delete the container **and all associated files**, including the project directory, and if isolated, configs, and local data. Make backups (or commit) if needed before running this.
+
+Once created, just launch your project from the auto-generated desktop icon—no need to return to the terminal for day-to-day use.
 
 ## Desktop Launcher
 
