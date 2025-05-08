@@ -1,11 +1,12 @@
 #!/bin/sh
 set -e
 
-APP_PREFIX="org.vscode_server"
+APP_NAME="org.alogani.vscode_container"
 TARGET_USER="codeserver"
-CONFIGS="/opt/vscode_container"
+APP_DIR="/opt/vscode_container"
+CONTAINERS="$APP_DIR/containers"
 BIN="/usr/local/bin/vscode_container"
-ICON="$CONFIGS/icon.png"
+ICON="$APP_DIR/icon.png"
 # default image
 IMAGE="docker.io/codercom/code-server:latest"
 
@@ -14,23 +15,24 @@ usage() {
 Usage: $0 [--isolated] [--custom-image IMAGE] <command> <args>
 
 Global flags:
-  --isolated               copy \$CONFIGS/local and \$CONFIGS/config into each container dir
+  --isolated               copy \$APP_DIR/local and \$APP_DIR/config into each container dir
   --custom-image IMAGE     override default code-server image
 
 Commands:
   create   <name>         create a new container and desktop app
   clone    <src>  [dst]   clone an existing container
   exec     <name> <cmd>   run command as root (/bin/sh to get a shell)
-  launch   <name>         run as gui inside a webview.
-                          Will be closed with the webview
-  mount    <name> <src> [dst] [...]  mount using bindfs with uid mapping 
+  launch   [name]         run as gui inside a webview.
+                          Will be closed with the webview.
+			  If name is not provided, use a popup
+  mount    <name> <src> [dst] [-- ...]  mount using bindfs with uid mapping 
   umount   <name> <dst>
   refresh  <name>         recreate a container but keep the config files
   remove   <name>         remove with all its configuration
   start    <name>         start in the background without gui
   stop     <name>         stop the background container
   list                    list all containers
-  podman   [...]          pass through to podman
+  podman [-- ...]         pass through to podman, use -- before arguments
 EOF
   exit 1
 }
@@ -56,32 +58,32 @@ COMMAND="$1"; shift || true
 #––– common helpers –––#
 require() { [ -n "$1" ] || { echo "Error: missing argument"; exit 1; }; }
 
-exec_codeserver() {
+su_codeserver() {
     sudo -u "$TARGET_USER" --login "$@"
 }
 
 # prepare the directory structure (but never rm -rf it!)
 setup_dirs() {
   NAME="$1"
-  D="$CONFIGS/$NAME"
-  exec_codeserver mkdir -p "$D/project"
-  exec_codeserver mkdir -p "$D/shared"
-  exec_codeserver chmod 777 "$D/shared"
+  D="$CONTAINERS/$NAME"
+  su_codeserver mkdir -p "$D/project"
+  su_codeserver mkdir -p "$D/shared"
+  su_codeserver chmod 777 "$D/shared"
   if [ "$ISOLATED" = "true" ]; then
-    exec_codeserver cp -a "$CONFIGS/local" "$D/local"
-    exec_codeserver cp -a "$CONFIGS/config" "$D/config"
+    su_codeserver cp -a "$APP_DIR/local" "$D/local"
+    su_codeserver cp -a "$APP_DIR/config" "$D/config"
   else
-    exec_codeserver ln -sf "$CONFIGS/local"  "$D/local"
-    exec_codeserver ln -sf "$CONFIGS/config" "$D/config"
+    su_codeserver ln -sf "$APP_DIR/local"  "$D/local"
+    su_codeserver ln -sf "$APP_DIR/config" "$D/config"
   fi
 }
 
 # action = "run" | "create", name = container name
 new_container() {
   ACTION="$1"; NAME="$2"
-  D="$CONFIGS/$NAME"
+  D="$CONTAINERS/$NAME"
   [ "$ACTION" = "create" ] && CMD="podman create" || CMD="podman run -d"
-  exec_codeserver $CMD --name "$NAME" \
+  su_codeserver $CMD --name "$NAME" \
     -p 127.0.0.1::8080 \
     -v "$D/local:/home/coder/.local" \
     -v "$D/config:/home/coder/.config" \
@@ -93,21 +95,6 @@ new_container() {
     $IMAGE
 }
 
-write_desktop() {
-  NAME="$1"
-  DPATH="$HOME/.local/share/applications/$APP_PREFIX.$NAME.desktop"
-  cat > "$DPATH" <<EOF
-[Desktop Entry]
-Name=VSCode $NAME
-Categories=Development;
-Comment=Spin up vscode dev environment
-Exec=$BIN launch $NAME
-Icon=$ICON
-Terminal=false
-Type=Application
-EOF
-}
-
 #––– commands –––#
 case "$COMMAND" in
 
@@ -115,38 +102,43 @@ case "$COMMAND" in
     NAME="$1"; require "$NAME"
     setup_dirs   "$NAME"
     new_container run "$NAME"
-    write_desktop "$NAME"
-    exec_codeserver podman stop "$NAME"
-    echo "Config at $CONFIGS/$NAME/config/code-server/config.yaml:"
-    exec_codeserver cat "$CONFIGS/$NAME/config/code-server/config.yaml"
+    su_codeserver podman stop "$NAME"
+    echo "Config at $CONTAINERS/$NAME/config/code-server/config.yaml:"
+    su_codeserver cat "$CONTAINERS/$NAME/config/code-server/config.yaml"
     ;;
 
   clone)
     SRC="$1"; require "$SRC"
     DST="${2:-${SRC}_clone}"
     # fail if dst already exists
-    if exec_codeserver podman container exists "$DST" 2>/dev/null; then
+    if su_codeserver podman container exists "$DST" 2>/dev/null; then
       echo "Error: target container '$DST' already exists." >&2
       exit 1
     fi
-    cp -ra "$CONFIGS/$SRC" "$CONFIGS/$DST"
+    cp -ra "$CONTAINERS/$SRC" "$CONTAINERS/$DST"
     new_container create "$DST"
-    write_desktop "$DST"
     echo "Cloned '$SRC' → '$DST'"
     ;;
 
   exec)
     NAME="$1"; require "$NAME"
     CMD=$@; require "$CMD"
-    exec_codeserver podman exec -u 0 -it "$NAME" $CMD
+    su_codeserver podman exec -u 0 -it "$NAME" $CMD
     ;;
 
   launch)
-    NAME="$1"; require "$NAME"
-    exec_codeserver podman start "$NAME" >/dev/null
-    PORT=$(exec_codeserver podman port "$NAME" | awk -F: '{print $2}')
-    webview.py "$APP_PREFIX.$NAME" "$NAME" "$PORT"
-    exec_codeserver podman stop "$NAME"
+    NAME="$1"
+    if [ -z "$NAME" ]; then
+      containers=$(ls "$CONTAINERS")
+      NAME=$("$APP_DIR/src/combobox.py" "VSCode container" "Select a VSCode Environment:" $containers)
+      if [ $? -ne 0 ]; then
+        exit $?
+      fi
+    fi
+    su_codeserver podman start "$NAME" >/dev/null
+    PORT=$(su_codeserver podman port "$NAME" | awk -F: '{print $2}')
+    "$APP_DIR/src/webview.py" "$APP_NAME" "$NAME" "$PORT"
+    su_codeserver podman stop "$NAME"
     ;;
 
   mount)
@@ -160,7 +152,7 @@ case "$COMMAND" in
       *)  ALIAS="$1"; shift ;;
     esac
 
-    DST="$CONFIGS/$NAME/shared/$ALIAS"
+    DST="$CONTAINERS/$NAME/shared/$ALIAS"
 
     # Collect options into a list (positional parameters)
     OPTS=""
@@ -178,7 +170,7 @@ case "$COMMAND" in
   
   umount)
     NAME="$1"; require "$NAME"
-    DST="$CONFIGS/$NAME/shared/$2"; require "$DST"
+    DST="$CONTAINERS/$NAME/shared/$2"; require "$DST"
     fusermount -u "$DST" 
     rmdir "$DST"
     ;;
@@ -186,42 +178,42 @@ case "$COMMAND" in
   refresh)
     NAME="$1"; require "$NAME"
     echo "Removing old container..."
-    exec_codeserver podman rm -f "$NAME"
-    echo "Re-creating container (preserving $CONFIGS/$NAME)…"
+    su_codeserver podman rm -f "$NAME"
+    echo "Re-creating container (preserving $CONTAINERS/$NAME)…"
     new_container run  "$NAME"
-    exec_codeserver podman stop "$NAME"
+    su_codeserver podman stop "$NAME"
     echo "Refreshed '$NAME'."
     ;;
 
   remove)
     NAME="$1"; require "$NAME"
-    exec_codeserver podman rm -f "$NAME"
-    exec_codeserver rm -rf "$CONFIGS/$NAME"
-    rm -f "$HOME/.local/share/applications/$APP_PREFIX.$NAME.desktop"
+    su_codeserver podman rm -f "$NAME"
+    su_codeserver rm -rf "$CONTAINERS/$NAME"
     ;;
 
   start)
     NAME="$1"; require "$NAME"
-    exec_codeserver podman start "$NAME"
-    PORT=$(exec_codeserver podman port "$NAME" | awk -F: '{print $2}')
+    su_codeserver podman start "$NAME"
+    PORT=$(su_codeserver podman port "$NAME" | awk -F: '{print $2}')
     echo "Listening on port $PORT"
     ;;
 
   stop)
     NAME="$1"; require "$NAME"
-    exec_codeserver podman stop "$NAME"
+    su_codeserver podman stop "$NAME"
     ;;
 
   list)
-    exec_codeserver podman ps --all
+    su_codeserver podman ps --all
     ;;
 
   podman)
     # pass everything to podman
-    exec_codeserver podman "$@"
+    su_codeserver podman $@
     ;;
 
   *)
     usage
     ;;
 esac
+

@@ -31,105 +31,47 @@ This setup prioritizes both usability and security:
 
 # Setup
 
-## Prerequisites
+## Setup
 
-Install Podman:
+1. Install Podman:
 
 ```
 sudo apt install podman
 ```
 
-## Install Required Files
-
-- Create the main folders:
-
-  ```
-  sudo mkdir -p /opt/vscode_container/config
-  sudo mkdir -p /opt/vscode_container/local
-  ```
-
-- Add a custom icon of your choice to:
-
-  ```
-  /opt/vscode_container/icon.png
-  ```
-
-  For instance, a popular black-themed VSCodium icon shared by the community is shipped in the repo (but not owned by me) and can be found here:
-  https://www.reddit.com/r/vsCodium/comments/q5trq1/vscodium_black_icon
-   _Note: This icon does not have an identified license._
-
-- Install the scripts:
-
-  * `webview.py` → `/usr/local/bin/`
-  * `vscode_container` → `/usr/local/bin/`
-
-## Create a Dedicated User
-
-Create a system user to run containers:
+2. Run or follow the installation script
 
 ```
-sudo adduser codeserver
+curl -fsSL https://raw.githubusercontent.com/Alogani/vscode_container/refs/heads/main/setup.sh | sh
 ```
 
-Grant your user passwordless access to run things as `codeserver`. Run:
-
-```
-sudo visudo
-```
-
-And add:
-
-```
-<your_username> ALL=(codeserver) NOPASSWD: ALL
-```
-
-Set ownership on the base folder:
-
-```
-sudo chown -R codeserver /opt/vscode_container
-```
-
----
 
 # Usage
-
-## Command Line
-
-Absolutely. Here's the revised **Command Line** section with both commonly used commands highlighted and the wording tightened up:
-
----
-
-## Command Line
-
-Good call—here’s the updated **Command Line** section with a clear warning added for `remove`:
-
----
 
 ## Command Line
 
 You can manage containers with:
 
 ```
-vscode_container [--isolated] [--custom-image IMAGE] <command> <args>
-
 Global flags:
-  --isolated               copy $CONFIGS/local and $CONFIGS/config into each container dir
+  --isolated               copy $APP_DIR/local and $APP_DIR/config into each container dir
   --custom-image IMAGE     override default code-server image
 
 Commands:
   create   <name>         create a new container and desktop app
   clone    <src>  [dst]   clone an existing container
-  exec     <name> <cmd>   run command as root inside container (/bin/sh to get a shell)
-  launch   <name>         run as gui inside a webview.
-                          Will be closed with the webview
-  mount    <name> <src> [dst] [...]  mount using bindfs with uid mapping 
+  exec     <name> <cmd>   run command as root (/bin/sh to get a shell)
+  launch   [name]         run as gui inside a webview.
+                          Will be closed with the webview.
+			  If name is not provided, use a popup
+  mount    <name> <src> [dst] [-- ...]  mount using bindfs with uid mapping 
   umount   <name> <dst>
   refresh  <name>         recreate a container but keep the config files
   remove   <name>         remove with all its configuration
   start    <name>         start in the background without gui
   stop     <name>         stop the background container
   list                    list all containers
-  podman   [...]          pass through to podman
+  podman [-- ...]         pass through to podman, use -- before arguments
 ```
 
 In practice, you'll mostly use:
@@ -149,13 +91,6 @@ In practice, you'll mostly use:
   ⚠️ **Warning:** This will permanently delete the container **and all associated files**, including the project directory, and if isolated, configs, and local data. Make backups (or commit) if needed before running this.
 
 Once created, just launch your project from the auto-generated desktop icon—no need to return to the terminal for day-to-day use.
-
-## Desktop Launcher
-
-Each project gets a `.desktop` launcher with a simple embedded WebView for code-server:
-
-![image](https://github.com/user-attachments/assets/8e9d6444-2a46-4d38-8d2c-94d00330ea58)
-
 
 ---
 

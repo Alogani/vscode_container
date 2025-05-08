@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=VSCode Container
+Categories=Development;
+Comment=Spin up vscode dev environment
+Exec=/usr/local/bin/vscode_container launch
+Icon=/opt/vscode_container/icon.png
+Terminal=false
+Type=Application
+StartupWMClass=VSCodeContainer
