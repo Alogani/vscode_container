@@ -15,7 +15,7 @@ usage() {
 Usage: $0 [--isolated] [--custom-image IMAGE] <command> <args>
 
 Global flags:
-  --isolated               copy \$APP_DIR/local and \$APP_DIR/config into each container dir
+  --isolated               copy $APP_DIR/local and $APP_DIR/config at creation
   --custom-image IMAGE     override default code-server image
 
 Commands:
@@ -23,7 +23,7 @@ Commands:
   clone    <src>  [dst]   clone an existing container
   exec     <name> <cmd>   run command as root (/bin/sh to get a shell)
   launch   [name]         run as gui inside a webview.
-                          Will be closed with the webview.
+                          The container will stop when the webview closes.
 			  If name is not provided, use a popup
   mount    <name> <src> [dst] [-- ...]  mount using bindfs with uid mapping 
   umount   <name> <dst>
