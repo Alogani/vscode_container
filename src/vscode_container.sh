@@ -100,7 +100,7 @@ new_container() {
 reapply_mounts() {
   NAME="$1"
   MFILE="$CONTAINERS/$NAME/mounts"
-  [ -f "$MFILE" ] || return
+  [ -f "$MFILE" ] || return 0
   while IFS='|' read -r SRC ALIAS OPTS; do
     DST="$CONTAINERS/$NAME/shared/$ALIAS"
     mkdir -p "$DST"
