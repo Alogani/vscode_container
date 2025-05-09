@@ -74,10 +74,11 @@ This makes it ideal for high-assurance workflows, development on shared systems,
 ## 🖥️ Requirements
 
 * `podman`
-* `code-server` image (default: `codercom/code-server:latest`)
-* `bindfs` (for volume mounting)
 * `sudo`
+* `git`
 * Python + Gtk/WebKit (for GUI launcher)
+* `bindfs` (for volume mounting)
+
 
 ---
 
@@ -101,10 +102,10 @@ vscode_container remove myproject
 
 # Setup
 
-1. Install Podman:
+1. Install Podman and git:
 
 ```
-sudo apt install podman
+sudo apt install podman git
 ```
 
 2. Run or follow the installation script
