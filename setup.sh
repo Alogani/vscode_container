@@ -39,6 +39,7 @@ warn_command() {
 }
 
 check_command "podman"
+check_command "git"
 warn_command "bindfs"
 
 echo "All necessary tools are installed or warned. Proceeding with the setup..."
