@@ -1,0 +1,4 @@
+bind-addr: 127.0.0.1:8080
+auth: none # Change this to password to have a password
+password: "password"
+cert: false
