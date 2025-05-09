@@ -163,6 +163,17 @@ Once created, just launch your project using the desktop icon—no need to retur
 
 ---
 
+## Creating your own image
+
+You can connect directly as codeserver user to make a new image available. Example:
+```sh
+alogani$ sudo -u codeserver bash
+codeserver$ podman build -t codeserver-rust /opt/vscode_container/docker/codeserver-rust
+codeserver$ exit
+alogani$ vscode_container create --custom-image codeserver-rust rust
+alogani$ vscode_container launch rust
+```
+
 ## Directory Mapping
 
 Here is the list of folders shared with the host:
