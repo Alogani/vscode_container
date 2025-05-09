@@ -14,7 +14,7 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-DEFAULT_MAIN_USER="$(id -u --name)"
+DEFAULT_MAIN_USER="$LOGNAME"
 read -p "Enter the main user (default: $DEFAULT_MAIN_USER): " MAIN_USER
 MAIN_USER="${MAIN_USER:-$DEFAULT_MAIN_USER}"
 
@@ -44,21 +44,6 @@ warn_command "bindfs"
 
 echo "All necessary tools are installed or warned. Proceeding with the setup..."
 
-# Clone the repository
-echo_message "Cloning the repository to $INSTALL_DIR"
-if [ ! -d "$INSTALL_DIR" ]; then
-    git clone "$REPO_URL" "$INSTALL_DIR"
-    chmod 750 "$INSTALL_DIR"
-    chmod +x "$INSTALL_DIR/src/*"
-else
-    echo "Directory $INSTALL_DIR already exists. Skipping cloning."
-fi
-
-# Create config and local directories
-echo_message "Creating config and local directories"
-mkdir -p "$INSTALL_DIR/config"
-mkdir -p "$INSTALL_DIR/local"
-
 # Create the dedicated user
 echo_message "Creating dedicated user: $DEDICATED_USER"
 if id "$DEDICATED_USER" >/dev/null 2>&1; then
@@ -81,10 +66,24 @@ fi
 
 usermod -aG $DEDICATED_USER $MAIN_USER
 
+# Clone the repository
+echo_message "Cloning the repository to $INSTALL_DIR"
+if [ ! -d "$INSTALL_DIR" ]; then
+    git clone "$REPO_URL" "$INSTALL_DIR"
+    chmod 750 "$INSTALL_DIR"
+    chmod +x "$INSTALL_DIR/src/*"
+    chown "$DEDICATED_USER:$DEDICATED_USER" "$INSTALL_DIR"
+else
+    echo "Directory $INSTALL_DIR already exists. Skipping cloning."
+fi
 
-echo_message "Setting ownership for $CONTAINERS_DIR"
+su - otheruser <<'END_OF_SU'
+# Create config and local directories
+echo_message "Creating config and local directories"
+mkdir -p "$INSTALL_DIR/config"
+mkdir -p "$INSTALL_DIR/local"
 mkdir -p "$CONTAINERS_DIR"
-chown -R "$DEDICATED_USER:$DEDICATED_USER" "$INSTALL_DIR"
+END_OF_SU
 
 ln -sf "$INSTALL_DIR/src/vscode_container.sh" /usr/local/bin/vscode_container
 echo "vscode_container.sh installed in /usr/local/bin/vscode_container (symlink)."
@@ -100,7 +99,6 @@ if [ -f "$DESKTOP_FILE" ]; then
 else
     echo "Desktop file not found at $DESKTOP_FILE. Skipping installation."
 fi
-
 
 echo_message "Setup completed successfully!"
 echo_message "You might need to reboot to finish the setup (user added to codeserver group)"
