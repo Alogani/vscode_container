@@ -162,6 +162,7 @@ case "$COMMAND" in
   mount)
     NAME="$1"; require "$NAME"; shift
     SRC="$1"; require "$SRC"; shift
+    FULL_PATH="$(realpath $SRC"
 
     # Determine alias path
     case "$1" in
@@ -180,11 +181,11 @@ case "$COMMAND" in
     done
 
     mkdir -p "$DST"
-    echo "$SRC|$ALIAS|$OPTS" >> "$CONTAINERS/$NAME/mounts"
+    echo "$FULL_PATH|$ALIAS|$OPTS" >> "$CONTAINERS/$NAME/mounts"
     bindfs -u $(id -u $TARGET_USER) -g $(id -g $TARGET_USER) \
-       $OPTS "$SRC" "$DST"
+       $OPTS "$FULL_PATH" "$DST"
 
-    echo "Mounted $SRC → $DST"
+    echo "Mounted $FULL_PATH → $DST"
     ;;
   
   umount)
