@@ -162,7 +162,7 @@ case "$COMMAND" in
   mount)
     NAME="$1"; require "$NAME"; shift
     SRC="$1"; require "$SRC"; shift
-    FULL_PATH="$(realpath $SRC"
+    FULL_PATH="$(realpath $SRC)"
 
     # Determine alias path
     case "$1" in
