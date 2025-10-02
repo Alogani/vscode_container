@@ -155,6 +155,7 @@ case "$COMMAND" in
     reapply_mounts "$NAME"
     su_codeserver podman start "$NAME" >/dev/null
     PORT=$(su_codeserver podman port "$NAME" | awk -F: '{print $2}')
+	export WEBKIT_DISABLE_COMPOSITING_MODE=1 # Disable gpu acceleration: trouble with nvidia
     "$APP_DIR/src/webview.py" "$APP_NAME" "$NAME" "$PORT"
     su_codeserver podman stop "$NAME"
     ;;
