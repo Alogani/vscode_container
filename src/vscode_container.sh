@@ -84,7 +84,7 @@ setup_dirs() {
 new_container() {
   ACTION="$1"; NAME="$2"
   D="$CONTAINERS/$NAME"
-  [ "$ACTION" = "create" ] && CMD="podman create" || CMD="podman run -d"
+  [ "$ACTION" = "create" ] && CMD="podman create" || CMD="podman run --tmpfs /tmp -d"
   su_codeserver $CMD --name "$NAME" \
     -p 127.0.0.1::8080 \
     -v "$D/local:/home/coder/.local" \
